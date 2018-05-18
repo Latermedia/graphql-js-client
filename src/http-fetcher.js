@@ -10,6 +10,18 @@ export default function httpFetcher(url, options = {}) {
         Accept: 'application/json',
         ...options.headers
       }
-    }).then((response) => response.json());
+    }).then((response) => {
+      return response.json().then(responseJSON => {
+        const hasError = !!responseJSON.errors;
+        if (hasError) {
+          return {
+            status: response.status,
+            errors: responseJSON.errors
+          };
+        }
+
+        return responseJSON;
+      })
+    });
   };
 }
