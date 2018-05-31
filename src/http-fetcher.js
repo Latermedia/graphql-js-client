@@ -11,17 +11,45 @@ export default function httpFetcher(url, options = {}) {
         ...options.headers
       }
     }).then((response) => {
-      return response.json().then(responseJSON => {
-        const hasError = !!responseJSON.errors;
-        if (hasError) {
-          return {
-            status: response.status,
-            errors: responseJSON.errors
-          };
-        }
+      const contentType = response.headers.get('content-type');
 
-        return responseJSON;
-      })
+      if (contentType === 'application/json') {
+        return _handleJSONResponse(response);
+      }
+
+      return _handleTextResponse(response);
     });
   };
+}
+
+function _handleJSONResponse(response) {
+  return response.json().then((responseJSON) => {
+    const hasError = Boolean(responseJSON.errors);
+
+    if (hasError) {
+      return {
+        status: response.status,
+        errors: responseJSON.errors,
+        hasError: true
+      };
+    }
+
+    return responseJSON;
+  });
+}
+
+function _handleTextResponse(response) {
+  return response.text().then((responseText) => {
+    const hasError = !response.ok;
+
+    if (hasError) {
+      return {
+        status: response.status,
+        errors: responseText,
+        hasError: true
+      };
+    }
+
+    return {data: responseText};
+  });
 }
