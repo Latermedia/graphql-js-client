@@ -1791,7 +1791,7 @@ function httpFetcher(url) {
     })).then(function (response) {
       var contentType = response.headers.get('content-type');
 
-      if (contentType === 'application/json') {
+      if (contentType.includes('application/json')) {
         return _handleJSONResponse(response);
       }
 
