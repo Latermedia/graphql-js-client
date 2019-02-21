@@ -11,46 +11,21 @@ export default function httpFetcher(url, options = {}) {
         ...options.headers,
         ...headers
       }
-    }).then((response) => {
-      const contentType = response.headers.get('content-type');
-
-      if (contentType.includes('application/json')) {
-        return _handleJSONResponse(response);
-      }
-
-      return _handleTextResponse(response);
-    });
+    }).then((response) => _handleResponse(response));
   };
 }
 
-function _handleJSONResponse(response) {
-  return response.json().then((responseJSON) => {
-    const hasError = Boolean(responseJSON.errors);
+function _handleResponse(response) {
+  const contentType = response.headers.get('content-type');
 
-    if (hasError) {
-      return {
-        status: response.status,
-        errors: responseJSON.errors,
-        hasError: true
-      };
-    }
+  if (contentType.includes('application/json')) {
+    return response.json();
+  }
 
-    return responseJSON;
-  });
+  return _handleTextResponse(response);
 }
 
+
 function _handleTextResponse(response) {
-  return response.text().then((responseText) => {
-    const hasError = !response.ok;
-
-    if (hasError) {
-      return {
-        status: response.status,
-        errors: responseText,
-        hasError: true
-      };
-    }
-
-    return {data: responseText};
-  });
+  return response.text().then((responseText) => ({data: responseText}));
 }
